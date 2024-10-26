@@ -1,0 +1,126 @@
+ADF expression Dynamic Functions Cheat Sheet 
+
+Here's a cheat sheet for Azure Data Factory (ADF) dynamic functions to help you create robust and flexible expressions. These functions are commonly used for data transformations, parameterization, and dynamic content generation in ADF pipelines.
+
+String Functions
+concat
+
+Combines multiple strings into one.
+Syntax: concat('string1', 'string2', ...)
+Example: concat('hello', 'world') → helloworld
+substring
+
+Extracts a portion of a string.
+Syntax: substring('string', start, length)
+Example: substring('abcdef', 1, 3) → bcd
+indexOf
+
+Finds the index of the first occurrence of a substring.
+Syntax: indexOf('string', 'substring')
+Example: indexOf('hello world', 'world') → 6
+replace
+
+Replaces all occurrences of a substring with a new string.
+Syntax: replace('string', 'find', 'replace')
+Example: replace('abcabc', 'a', 'z') → zbczbc
+toLower / toUpper
+
+Converts a string to lowercase or uppercase.
+Syntax: toLower('STRING') / toUpper('string')
+trim / ltrim / rtrim
+
+Removes whitespace from both ends, left, or right of a string.
+Syntax: trim(' string ') → string
+Date Functions
+utcnow
+
+Returns the current UTC timestamp.
+Syntax: utcnow()
+Example: utcnow('yyyy-MM-dd') → 2024-10-26
+addDays / addMonths / addYears
+
+Adds a specific number of days, months, or years to a date.
+Syntax: addDays('date', number), addMonths('date', number)
+formatDateTime
+
+Formats a date to a specified format.
+Syntax: formatDateTime('date', 'format')
+Example: formatDateTime('2024-10-26T00:00:00Z', 'yyyy-MM-dd') → 2024-10-26
+dateDiff
+
+Calculates the difference between two dates.
+Syntax: dateDiff('date1', 'date2', 'interval')
+Example: dateDiff('2024-10-26', '2024-10-24', 'Day') → 2
+Mathematical Functions
+add / sub / mul / div
+
+Basic arithmetic operations for addition, subtraction, multiplication, and division.
+Syntax: add(5, 3) → 8
+mod
+
+Returns the remainder after division.
+Syntax: mod(10, 3) → 1
+min / max
+
+Finds the minimum or maximum of a set of numbers.
+Syntax: min(3, 5, 2) → 2
+Logical Functions
+if
+
+Evaluates a condition and returns a result.
+Syntax: if(condition, trueResult, falseResult)
+Example: if(1 > 0, 'yes', 'no') → yes
+equals
+
+Checks if two values are equal.
+Syntax: equals('value1', 'value2')
+Example: equals(5, 5) → true
+and / or / not
+
+Logical operations.
+Syntax: and(equals(5, 5), greater(6, 3)) → true
+greater / less / greaterOrEquals / lessOrEquals
+
+Comparison operations.
+Syntax: greater(10, 5) → true
+Collection Functions
+first / last
+
+Returns the first or last element in an array.
+Syntax: first([1, 2, 3]) → 1
+length
+
+Gets the number of elements in an array or string.
+Syntax: length([1, 2, 3]) → 3
+contains
+
+Checks if an array or string contains a specific value.
+Syntax: contains([1, 2, 3], 2) → true
+join
+
+Concatenates elements of an array into a string with a specified delimiter.
+Syntax: join(['a', 'b', 'c'], '-') → a-b-c
+union
+
+Combines multiple arrays into one.
+Syntax: union([1, 2], [3, 4]) → [1, 2, 3, 4]
+Pipeline and Trigger Functions
+pipeline
+
+Returns pipeline properties.
+Syntax: pipeline().DataFactory returns the Data Factory name.
+trigger
+
+Returns trigger properties.
+Syntax: trigger().startTime returns the start time of the trigger.
+activity
+
+Accesses properties of activities in a pipeline.
+Syntax: activity('activityName').output
+This cheat sheet covers a range of essential dynamic functions in ADF, from string manipulation to date handling and logical operations. Let me know if you need examples for specific scenarios in ADF!
+
+
+
+
+
+
