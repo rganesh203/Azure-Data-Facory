@@ -1,0 +1,600 @@
+1. csv file adf pipeline in skip row delimeter in copy activity
+
+2. semi join(remove duplicates)
+
+	SELECT *
+	FROM Table1
+	WHERE EXISTS (
+		SELECT 1
+		FROM Table2
+		WHERE Table1.ID = Table2.ID
+	);
+	# inner join(include duplicates)
+	SELECT *
+	FROM Table1
+	INNER JOIN Table2 ON Table1.ID = Table2.ID;
+
+3. merge in sql
+	In SQL, the MERGE statement is used to perform an "upsert" operation, 
+	which means it can either update existing rows or insert new rows into a target table 
+	based on a specified condition. This statement is particularly useful when you want to 
+	synchronize data between two tables.
+
+	The basic syntax of the MERGE statement is as follows:
+
+	MERGE INTO target_table AS target
+	USING source_table AS source
+	ON (target.condition_column = source.condition_column)
+
+	-- When matched (update)
+	WHEN MATCHED THEN
+		UPDATE SET target.column1 = source.column1, target.column2 = source.column2
+
+	-- When not matched (insert)
+	WHEN NOT MATCHED THEN
+		INSERT (column1, column2, ...)
+		VALUES (source.column1, source.column2, ...);
+	Explanation:
+
+	target_table: The table you want to update or insert into.
+	source_table: The table providing the data for the update or insert operation.
+	condition_column: The column used to match records between the target and source tables.
+	WHEN MATCHED: Specifies the action to take when a match is found.
+	WHEN NOT MATCHED: Specifies the action to take when no match is found.
+	Here's an example that demonstrates a simple use case:
+
+	MERGE INTO Employees AS target
+	USING UpdatedEmployees AS source
+	ON (target.EmployeeID = source.EmployeeID)
+
+	-- When matched (update)
+	WHEN MATCHED THEN
+		UPDATE SET target.FirstName = source.FirstName, target.LastName = source.LastName
+
+	-- When not matched (insert)
+	WHEN NOT MATCHED THEN
+		INSERT (EmployeeID, FirstName, LastName, Salary)
+		VALUES (source.EmployeeID, source.FirstName, source.LastName, source.Salary);
+		
+	In this example, the Employees table is the target table, and UpdatedEmployees is 
+	the source table. The EmployeeID is used as the condition column to match records. 
+	If a match is found, the FirstName and LastName columns are updated; otherwise, a new 
+	record is inserted into the Employees table.
+
+4. The list of joins provided by Spark SQL is:
+
+	Inner Join
+	Left / Left Outer Join
+	Right / Right Outer Join
+	Outer / Full Join
+	Cross Join
+	Left Anti Join
+	Left Semi Join
+	Self Join
+	
+	Spark Job
+	A Spark job represents a complete computation task that Spark performs on a dataset. 
+	It consists of multiple stages and encompasses all the steps needed to transform and 
+	analyze data. Jobs are submitted to Spark through the driver program and are divided 
+	into smaller units called stages for execution.
+
+	Spark Stage
+	A stage is a logical unit of work within a Spark job. It represents a set of tasks that 
+	can be executed together, typically resulting from a narrow transformation (e.g., map or filter) 
+	or a shuffle operation (e.g., groupByKey or reduceByKey). Stages are determined by the Spark engine 
+	during the query optimization phase, based on the dependencies between RDDs (Resilient Distributed 
+	Datasets) or DataFrames.
+
+	Spark Task
+	A task is the smallest unit of work in Spark. It represents a single operation that can be 
+	executed on a partitioned subset of data. Tasks are executed by the worker nodes in parallel,
+	leveraging the distributed computing capabilities of Spark. Each task operates on a portion of 
+	the data, applying the required transformations and producing intermediate or final results.
+
+
+5. how to call function written some notebook and call another notebook in databricks
+
+	In Databricks, notebooks are essentially interactive documents that can contain both code 
+	and rich text. To call a function from one notebook in another notebook, you can use %run 
+	command. Here are the steps to call a function from one notebook in another notebook:
+
+	1. Define a Function in the First Notebook:
+	In the first notebook (let's call it NotebookA), define the function you want to call.
+
+	# NotebookA
+
+	def my_function():
+		# Your function code here
+		print("Hello from my_function!")
+	2. Call the Function in the Second Notebook:
+	In the second notebook (let's call it NotebookB), use the %run command to execute the first 
+	notebook and then call the function.
+
+	# NotebookB
+
+	%run "/Workspace/NotebookA"
+
+	# Now you can call the function from NotebookA
+	my_function()
+	Make sure to replace "/Workspace/NotebookA" with the actual path to NotebookA in your workspace.
+
+	Important Notes:
+	%run is a Databricks-specific command used to execute another notebook. It essentially runs all 
+	the code cells in the specified notebook.
+	Make sure that the notebook you are calling contains the function you want to use.
+	The %run command executes the entire notebook, so it's essential to keep the notebook clean and 
+	modular, separating functions from other code.
+	Keep in mind that using %run in this way is a convenient but straightforward method. Depending 
+	on your use case, you may also explore Databricks Libraries or creating a Python package for more 
+	organized and modular code sharing.
+
+6. number of partitions in rdd and df
+	# Check the number of partitions in an RDD
+	print("Number of partitions in RDD:", rdd.getNumPartitions())
+
+	# Check the number of partitions in a DataFrame
+	print("Number of partitions in DataFrame:", df.rdd.getNumPartitions())
+
+7. spark dataframes of mutable immutable
+
+	In the context of Apache Spark, DataFrames can be classified based on their mutability:
+
+	Immutable DataFrames:
+
+	Definition: Immutable DataFrames are read-only. Once created, you cannot modify their content. 
+	Any operation on an immutable DataFrame creates a new DataFrame, leaving the original DataFrame 
+	unchanged.
+	Example Operations: select(), filter(), groupBy(), etc.
+	Advantages:
+	Immutability simplifies debugging and reasoning about the behavior of your code.
+	Spark can optimize transformations more effectively since it doesn't need to worry about changes 
+	in the original DataFrame.
+	Example:
+
+	# Creating an immutable DataFrame
+	df_immutable = spark.read.csv("path/to/data.csv")
+
+	# Applying transformations
+	df_transformed = df_immutable.select("column1", "column2").filter(df_immutable["column3"] > 100)
+	Mutable DataFrames (in Spark 3.0+):
+
+	Definition: Mutable DataFrames, also known as Delta tables or Delta Lake tables, introduce support 
+	for upserts, deletes, and merges. Delta tables allow you to modify data in place while providing ACID 
+	transaction support.
+	Advantages:
+	Enables operations like update, delete, and merge, which were not natively supported in classic Spark 
+	DataFrames.
+	Suitable for scenarios where you need to make changes to the existing data, such as updating historical 
+	records.
+	Example:
+
+	# Creating a mutable DataFrame using Delta Lake
+	df_mutable = spark.read.format("delta").table("my_table")
+
+	# Applying updates using Delta API
+	df_mutable.update("column1 = 'new_value'", condition="column2 > 50")
+	Note: The concept of mutable DataFrames is primarily associated with Delta Lake, a storage layer 
+	built on top of Apache Spark that brings ACID transactions to Spark DataFrames. It's important to 
+	check the version of Spark and the libraries used in your environment, as features and capabilities 
+	may vary across versions.
+
+8. types of clusters
+	All-Purpose compute: Used to analyze data collaboratively using interactive notebook. You can create, 
+	terminate, and restart this compute using the UI, CLI, or REST API.
+
+	Job compute: Used to run fast and robust automated jobs. The Databricks job scheduler creates a job 
+	compute when you run a job on a new compute. The compute terminates when the job is complete. 
+	You cannot restart a job cluster. See Use Databricks compute with your jobs.
+
+	SQL warehouses: Used to run SQL commands on data objects within Databricks SQL. You can create 
+	SQL warehouses using the UI, CLI, or REST API.
+
+	Instance pools: Compute with idle, ready-to-use instances, used to reduce start and autoscaling 
+	times. You can create this compute using the UI, CLI, or REST API.
+	
+	#Modes in Databricks Cluster?
+	Standard Mode Databricks Cluster
+	High Concurrent Mode Databricks Cluster
+	Single node Databricks Cluster
+	
+8. dag in databricks
+
+	In Databricks, a Directed Acyclic Graph (DAG) is a way to represent the flow and dependencies 
+	of a set of tasks or operations. In the context of Databricks, this often refers to the sequence 
+	of operations in a Spark job. Databricks leverages Apache Spark for distributed data processing, 
+	and the Spark execution plan can be visualized as a DAG.
+
+	Here's a brief overview of how DAGs are relevant in Databricks:
+
+	Spark Jobs and Stages:
+
+	In Databricks, when you execute a Spark job, it is divided into stages, and each stage consists of 
+	one or more tasks.
+	The tasks in a stage are executed in parallel, but stages are executed sequentially, and there is a 
+	dependency relationship between stages.
+	
+	Visualizing the DAG:
+
+	Databricks provides a user interface that allows you to visualize the DAG for a Spark job.
+	You can see the stages and tasks, along with their dependencies, in the Databricks Jobs UI.
+	Optimizations and Lazy Evaluation:
+
+	Spark performs optimizations on the DAG before executing it.
+	Transformations on DataFrames or RDDs in Spark are lazily evaluated, meaning the execution plan is 
+	not immediately executed. Instead, Spark builds up a logical plan (DAG) and optimizes it before 
+	executing.
+	
+	Dependency Tracking:
+
+	The DAG represents the logical flow of your Spark job, where each node corresponds to a task or 
+	operation, and edges represent dependencies between tasks.
+	This structure allows Spark to determine the optimal execution plan for the given set of operations.
+	
+	Understanding Performance:
+
+	Analyzing the DAG can help you understand the performance characteristics of your Spark job. You 
+	can identify stages that take longer to execute and potentially optimize them.
+	
+	Databricks Jobs UI:
+
+	In the Databricks Jobs UI, you can view details about your job, including the DAG visualization. 
+	This can be useful for troubleshooting and performance tuning.
+	Here's a simple example of a DAG in Databricks using Spark:
+
+	#Creating a DataFrame and performing transformations
+	df = spark.read.csv("/path/to/data.csv")
+	df_filtered = df.filter(df["column"] > 50)
+	df_transformed = df_filtered.select("column1", "column2")
+
+	#Action triggers the execution of the DAG
+	result = df_transformed.collect()
+	
+	In this example, the DAG consists of the read operation, filter operation, and select operation, 
+	with appropriate dependencies between them. The actual execution happens when the collect() action 
+	is called.
+
+9. coalecs vs repartition advantages and disanadantages
+
+	In Apache Spark, both coalesce and repartition are methods used to control the number of partitions 
+	in a DataFrame or RDD. However, they have different behaviors and use cases. Let's explore the 
+	advantages and disadvantages of each:
+
+	coalesce:
+	Advantages:
+
+	Reduces Shuffling Overhead: coalesce is a narrow transformation that combines existing partitions 
+	without shuffling data across the network. It minimizes data movement, making it more efficient than 
+	repartition in certain scenarios.
+	Faster for Decreasing Partitions: When you need to decrease the number of partitions, coalesce is 
+	generally faster than repartition.
+	Disadvantages:
+
+	Cannot Increase Partitions: coalesce cannot be used to increase the number of partitions. It merges 
+	adjacent partitions, but it does not redistribute data across a larger number of partitions.
+	May Result in Skewed Partitions: If your data is highly skewed, using coalesce might lead to unevenly 
+	sized partitions.
+	repartition:
+	Advantages:
+
+	Reshuffles Data: repartition is a wide transformation that redistributes data across the specified 
+	number of partitions. It is suitable when you want to increase or decrease the number of partitions 
+	and achieve a more even distribution of data.
+	Useful for Load Balancing: Effective for mitigating skewed data distribution issues, as it redistributes 
+	data more evenly.
+	Disadvantages:
+
+	Incurs Shuffling Overhead: repartition involves a shuffle operation, which can be computationally 
+	expensive, especially when dealing with large datasets. It may require moving data across the network, 
+	impacting performance.
+	Slower for Decreasing Partitions: When reducing the number of partitions, repartition can be slower 
+	compared to coalesce because it involves a more extensive shuffle.
+	Recommendations:
+	Use coalesce when you need to decrease the number of partitions and want to minimize shuffling overhead.
+	Use repartition when you need to increase or decrease the number of partitions and want to redistribute 
+	data evenly, even if it involves shuffling.
+	Example:
+
+	# Using coalesce to decrease partitions
+	df_coalesced = df.repartition(5)
+
+	# Using repartition to increase or decrease partitions
+	df_repartitioned = df.repartition(10)
+	In summary, the choice between coalesce and repartition depends on the specific use case, the desired 
+	number of partitions, and the trade-offs between shuffling overhead and achieving an even data 
+	distribution.
+
+9. check all storage level in databricks notebook persistent storage pyspark
+	
+	from pyspark import SparkContext
+	sc = SparkContext.getOrCreate()
+
+	# Check RDD storage levels
+	for rdd in sc.getRDDStorageInfo():
+		print(rdd)
+
+10. broadcast hash, shuffle join, shuffle sort merge, cartesean, broadcaste nested join
+
+	In Apache Spark, there are several types of joins and optimization strategies for performing 
+	join operations. The terms you mentioned are related to the join strategies used in Spark. Let's 
+	briefly go over each one:
+
+	#Broadcast Hash Join:
+
+	Description: In a broadcast hash join, one of the DataFrames is small enough to fit in the memory 
+	of each executor, so it is broadcasted to all executor nodes. The larger DataFrame is then 
+	partitioned and the join is performed locally on each partition.
+	Use Case: It is efficient when one DataFrame is significantly smaller than the other.
+
+	spark.conf.set("spark.sql.autoBroadcastJoinThreshold", -1)  # To force broadcast join
+	result = df1.join(broadcast(df2), "common_column")
+	
+	#Shuffle Hash Join:
+
+	Description: In a shuffle hash join, both DataFrames are partitioned based on the join key, and 
+	the partitions are shuffled across the network. Each partition of one DataFrame is then joined with
+	the corresponding partition of the other DataFrame.
+	Use Case: It is used when the DataFrames are large and cannot fit in the memory of each executor.
+
+	result = df1.join(df2, "common_column")
+	
+	#Shuffle Sort Merge Join:
+
+	Description: Similar to shuffle hash join, but it additionally sorts the data within each partition 
+	before performing the join. This can improve performance when the data is sorted on the join key.
+	Use Case: Effective when both DataFrames are sorted on the join key.
+
+	spark.conf.set("spark.sql.join.preferSortMergeJoin", "true")
+	result = df1.join(df2, "common_column")
+	
+	#Cartesian Join:
+
+	Description: Also known as a cross join, it combines each row from the first DataFrame with every 
+	row from the second DataFrame, resulting in a Cartesian product.
+	Use Case: It should be used cautiously, as it can lead to a large number of output rows.
+
+	result = df1.crossJoin(df2)
+	
+	#Broadcast Nested Loop Join:
+
+	Description: In a broadcast nested loop join, one DataFrame is broadcasted to all executor nodes, 
+	and a nested loop join is performed with the other DataFrame.
+	Use Case: It is useful when the join key has a high selectivity, meaning the number of distinct 
+	values is small.
+
+	spark.conf.set("spark.sql.autoBroadcastJoinThreshold", -1)  # To force broadcast nested loop join
+	result = df1.join(broadcast(df2), "common_column")
+	
+	It's important to note that the effectiveness of each join strategy depends on the size of the 
+	DataFrames, the nature of the data, and the available resources. Spark's Catalyst optimizer will 
+	choose the most appropriate strategy based on the context, but you can also influence the choice 
+	using configuration settings and hints in your Spark code.
+	
+11. serialization/deserialization copy activity in adf
+
+	Serialization and deserialization in the context of Azure Data Factory (ADF) refer to the process of converting data between its original format and a format suitable for transport or storage. In the case of the Copy Data Activity in ADF, serialization and deserialization settings play a role in handling data during movement between sources and sinks.
+
+	Serialization in Copy Activity:
+	When you configure a Copy Data Activity, you often need to specify how data should be serialized before it is moved from the source to the destination. Serialization involves converting data from its source representation into a format that can be efficiently transmitted or stored.
+
+	Example Scenario:
+
+	Source: A CSV file in Azure Data Lake Storage.
+	Destination: An Azure SQL Database.
+	Serialization Settings:
+
+	You may configure serialization options in the source dataset to define how the data is formatted for movement.
+	For the CSV example, you might specify settings such as column delimiter, row delimiter, and encoding.
+	Deserialization in Copy Activity:
+	On the flip side, deserialization is the process of converting serialized data back into its original format. In the context of Copy Data Activity, this happens when data is moved from the source to the destination, and it needs to be transformed into the format expected by the destination.
+
+	Example Scenario:
+
+	Source: A JSON file in Azure Blob Storage.
+	Destination: An Azure Synapse Analytics (formerly Azure SQL Data Warehouse) table.
+	Deserialization Settings:
+
+	In the destination dataset, you may configure deserialization options to specify how the data should be interpreted and loaded into the destination.
+	For the JSON example, you might specify settings such as the hierarchy of the JSON file, mapping columns, etc.
+	Key Considerations:
+	Data Format Compatibility:
+
+	Ensure that serialization and deserialization settings are compatible between the source and destination.
+	For example, if your source data is JSON, ensure that the destination can handle JSON-formatted data.
+	Performance Optimization:
+
+	Adjust serialization and deserialization settings to optimize data movement performance.
+	Minimize unnecessary conversions and transformations to improve efficiency.
+	Data Type Mapping:
+
+	Pay attention to data types during serialization and deserialization, especially when moving data between systems with different data type conventions.
+	Error Handling:
+
+	Configure error handling mechanisms in your Copy Data Activity to address issues that may arise during serialization or deserialization.
+	By understanding and configuring serialization and deserialization settings appropriately in your Copy Data Activity, you can ensure smooth and efficient movement of data between different data sources and sinks in Azure Data Factory.
+
+12. pyspark databricks read options parameters
+
+	When reading data in PySpark on Databricks, you can use the read function from the pyspark.sql module along with various options to customize the reading process. These options are specified as key-value pairs in the options parameter. Here are some common read options parameters you can use with PySpark on Databricks:
+
+	Format Options:
+
+	format: Specifies the file format to use for reading data. Common values include "parquet", "json", "csv", "orc", etc.
+
+	df = spark.read.format("parquet").load("/path/to/parquet/files")
+	CSV Options:
+
+	header: If True, the first row of the CSV file will be treated as the header.
+	inferSchema: If True, attempts to infer the schema of the CSV file.
+	delimiter: Specifies the delimiter used in the CSV file.
+
+	df = spark.read.option("header", "true").option("inferSchema", "true").csv("/path/to/csv/files")
+	JSON Options:
+
+	multiline: If True, allows JSON lines to span multiple lines.
+	samplingRatio: Specifies a sampling ratio for inferring the JSON schema.
+
+	df = spark.read.option("multiline", "true").json("/path/to/json/files")
+	Parquet Options:
+
+	mergeSchema: If True, performs schema merging when reading Parquet files.
+
+	df = spark.read.option("mergeSchema", "true").parquet("/path/to/parquet/files")
+	ORC Options:
+
+	compression: Specifies the compression codec to use when reading ORC files.
+
+	df = spark.read.option("compression", "snappy").orc("/path/to/orc/files")
+	Avro Options:
+
+	compression: Specifies the compression codec to use when reading Avro files.
+
+	df = spark.read.option("compression", "deflate").format("avro").load("/path/to/avro/files")
+	Database Options:
+
+	url: Specifies the JDBC URL to connect to a database.
+	dbtable: Specifies the name of the table to read from a database.
+	user and password: Specifies the username and password for database authentication.
+
+	df = spark.read.format("jdbc").option("url", "jdbc:mysql://host:port/database").option("dbtable", "table").option("user", "username").option("password", "password").load()
+	Additional Options:
+
+	inferSchema: If True, attempts to infer the schema of the data.
+	ignoreLeadingWhiteSpace and ignoreTrailingWhiteSpace: If True, leading/trailing whitespaces in column names are ignored.
+	dateFormat and timestampFormat: Specifies the date and timestamp formats for parsing.
+	mode: Specifies the behavior of the reader when encountering corrupt records. Values can be "PERMISSIVE", "DROPMALFORMED", or "FAILFAST".
+
+	df = spark.read.option("inferSchema", "true").option("dateFormat", "yyyy-MM-dd").csv("/path/to/data")
+	These are just a few examples of the many options available when reading data in PySpark on Databricks. You can refer to the official documentation for the most up-to-date and comprehensive list of options: PySpark SQL DataFrameReader
+
+13. How can one combine or merge several rows into one row in ADF? Can you explain the process? using copy activity
+
+	Combining or merging several rows into one row in Azure Data Factory (ADF) can be achieved using the Aggregate Transformation within the Copy Data Activity. The Aggregate Transformation allows you to perform various aggregation operations, including concatenating or merging values from multiple rows into a single row.
+
+	Here's a step-by-step process to achieve this using the Copy Data Activity in Azure Data Factory:
+
+	Scenario:
+	Assume you have a source dataset with multiple rows for each key, and you want to merge values from these rows into a single row based on a specific key.
+
+	Steps:
+	Source Dataset:
+
+	Begin by creating a source dataset that represents your source data. Ensure that it contains the key by which you want to combine rows.
+	Copy Data Activity:
+
+	Create a Copy Data Activity in your pipeline.
+	Source Settings:
+
+	Configure the source settings to read data from your source dataset.
+	Aggregate Transformation:
+
+	In the Copy Data Activity, use the Aggregate Transformation to group data based on the key.
+	Configure the aggregate transformation to concatenate or merge values from multiple rows within each group.
+	Example Aggregate Transformation:
+
+
+	"source": {
+		"type": "SqlSource",
+		"sqlReaderQuery": "SELECT key, CONCATENATE(value_column, ', ') AS merged_values FROM your_source_table GROUP BY key"
+	},
+	In the above example, value_column is the column you want to merge, and CONCATENATE is a placeholder for the aggregation function you want to use. You can customize this based on your specific requirement.
+
+	Destination Settings:
+
+	Configure the destination settings to write the aggregated data to your target dataset.
+	Mappings:
+
+	Map the columns in your source and destination datasets. Ensure that the aggregated column is correctly mapped.
+	Run the Pipeline:
+
+	Run the pipeline to execute the Copy Data Activity with the Aggregate Transformation.
+	Important Considerations:
+	The availability of aggregation functions might depend on the type of source and destination datasets. Make sure to check the supported functions for your specific scenario.
+	Adjust the SQL query in the Aggregate Transformation to suit your data and aggregation requirements.
+	Ensure that your target dataset has the necessary schema to accommodate the merged values.
+	By using the Aggregate Transformation in the Copy Data Activity, you can effectively merge or concatenate values from multiple rows into a single row based on a specified key in Azure Data Factory.
+
+14. incremental refresh in databricks
+	
+	Incremental refresh is a technique used to update only the new or modified data in a dataset, reducing the amount of data processed during data refresh operations. In Databricks, you can implement incremental refresh strategies using various approaches. Here's a general guide on how you can perform incremental refresh in Databricks:
+
+	Scenario:
+	Let's consider a scenario where you have a large dataset in a Delta table in Databricks, and you want to refresh your analytics results only with the new or modified data that has been added since the last refresh.
+
+	Steps:
+	Use Delta Tables:
+
+	Ensure that your source data is stored in a Delta table. Delta tables support ACID transactions and provide features like time travel and versioning, making incremental refresh easier.
+	Timestamp or Incremental Column:
+
+	Have a timestamp column or an incremental column in your Delta table that indicates when a record was added or modified.
+	Identify Last Refresh Timestamp:
+
+	Store the timestamp of the last refresh, either in a configuration table, a dedicated table, or some other storage mechanism.
+	Determine New or Modified Data:
+
+	Use a query to identify records added or modified since the last refresh timestamp.
+	Example:
+	python
+	Copy code
+	last_refresh_timestamp = "2023-01-01 00:00:00"
+	query = f"SELECT * FROM your_delta_table WHERE timestamp_column > '{last_refresh_timestamp}'"
+	new_data = spark.sql(query)
+	Append or Merge Data:
+
+	Use Delta's merge or insert operation to add the new or modified data to your analytics table.
+	Example:
+	python
+	Copy code
+	new_data.write.format("delta").mode("append").saveAsTable("your_analytics_table")
+	Update Last Refresh Timestamp:
+
+	Update the last refresh timestamp to the current time to keep track of when the incremental refresh occurred.
+	Example Implementation:
+	python
+	Copy code
+	# Configuration
+	delta_table = "your_delta_table"
+	analytics_table = "your_analytics_table"
+	last_refresh_timestamp = "2023-01-01 00:00:00"
+
+	# Identify new or modified data
+	query = f"SELECT * FROM {delta_table} WHERE timestamp_column > '{last_refresh_timestamp}'"
+	new_data = spark.sql(query)
+
+	# Append or merge data
+	new_data.write.format("delta").mode("append").saveAsTable(analytics_table)
+
+	# Update last refresh timestamp
+	current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	update_timestamp_query = f"UPDATE your_config_table SET last_refresh_timestamp = '{current_timestamp}'"
+	spark.sql(update_timestamp_query)
+	Additional Considerations:
+	Make sure to handle time zones appropriately when dealing with timestamp columns.
+	Consider using Delta's time travel feature for easy rollbacks or historical analysis.
+	Adapt this approach based on your specific requirements and data characteristics. 
+	The goal is to minimize the amount of data processed during each refresh while ensuring the 
+	accuracy and completeness of your analytics results.
+
+	
+import pandas as pd
+import glob
+
+# Assuming you have CSV files in a directory, you can use glob to get the file names
+file_pattern = 'path/to/csv/files/*.csv'
+file_list = glob.glob(file_pattern)
+
+# Create an empty DataFrame to store the combined data
+combined_data = pd.DataFrame()
+
+# Iterate through the list of files and concatenate them, adding the filename as a column
+for i in file_list:
+    df = pd.read_csv(i)
+    filename = i.split('/')[-1]  # Extracting the filename from the path
+    df.insert(0, 'filename', filename)  # Adding a column with the filename
+    combined_data = pd.concat([combined_data, df], ignore_index=True)
+
+# Adding an 'account_id' column to the last position
+combined_data['account_id'] = 'your_account_id_value'
+
+# Save the combined data to a new CSV file
+combined_data.to_csv('path/to/combined_file.csv', index=False)
